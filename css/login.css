@@ -1,0 +1,31 @@
+
+
+.encabezado{
+                background: #1f669b;
+                border-radius: 5px;
+                border: 1px solid#E3E3E3;
+                color: #ffffff;
+
+
+            }
+	.botones{
+                text-decoration: none;
+                padding: 5px;
+                font-weight: 450;
+                font-size: 13px;
+                color: #A4A4A4;
+                background-color: #ffffff;
+                border-radius:5px;
+                border: 1px solid #BDBDBD;
+
+            }
+    .iconoRegresar {
+                line-height: 34px;
+                width: 34px;
+                height: 34px;
+                background: rgba( 255, 255, 255, .8 ) 50% 50%;
+                background-image:url('images/cerrar.png');
+                background-repeat:no-repeat;
+                background-size:34px 34px;                
+            }
+

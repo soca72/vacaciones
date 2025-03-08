@@ -1,0 +1,550 @@
+<?php
+error_reporting(E_ALL ^ E_NOTICE);
+header('Content-Type: text/html; charset=utf-8'); 
+session_start();
+if($_SESSION["idusuario"]!=""){
+    $idusuario=$_SESSION["idusuario"];
+    $idusuarioData=$_SESSION["idusuariodata"];
+}
+else{
+header("Location:../index.php");
+}
+$iddepartamento=$_SESSION["iddepartamento"];
+$accion=$_SESSION["accion"];
+$nomuser=$_SESSION["nomuser"];
+$general=$_POST["general"];
+if($_GET["filtro"]){
+    $general="ocultos";
+}
+include "conexion.php";
+include "funciones.php";
+$impresor=new impresor;
+$usuario=new usuario;
+$pagina='informe';
+$ocultar=1;
+$texto='Ocultar';
+        $sql="BEGIN VAC_PRC_permisosusario(:idusuario , :permisos); END;";
+        $cursor = oci_new_cursor($conn);
+        $stmt= oci_parse($conn, $sql);
+        oci_bind_by_name($stmt, ":permisos", $cursor, -1, OCI_B_CURSOR);
+        oci_bind_by_name($stmt,':idusuario',$idusuarioData,32);
+        $r=oci_execute($stmt);
+        $r=oci_execute($cursor);
+        $permisos=array();
+        $permisosaimprimir=array();
+
+        $i=0;
+        $auximp=0; 
+        while (($row = oci_fetch_array($cursor, OCI_BOTH)) != false) {
+            $permisos[$i] = $row[0];
+            $permisosaimprimir[$auximp]=$row[0];
+            $auximp++;
+            $i++;
+        }
+        echo '<html>
+        <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+        ';
+        
+        echo"
+<title>
+  Vacaciones
+</title>
+<style>
+.btn-toolbar{
+display:none;
+}
+*:focus{
+	outline:0px;
+}
+
+.panel-primary table {
+font-size:11.5px;
+}
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0; 
+}
+select{
+border-radius:5px;
+padding:2px;
+padding-left:2px;
+border-width:1px;
+border-style:solid;
+border-color:#BDBDBD;
+height:30px;
+font-size:20px;
+color:#000000;
+}
+input{
+border-radius:5px;
+padding:2px;
+padding-left:2px;
+border-width:1px;
+border-style:solid;
+border-color:#BDBDBD;
+height:30px;
+font-size:20px;
+color:#000000;
+}
+input:focus{
+border-width:2px;
+border-color:#609EF0;
+}
+.tablaOrden{
+width:30%;
+margin:auto;
+
+}
+
+.tablaOrden td{
+text-align:center;
+padding:5px;
+}
+.tablaOrden th{
+padding:7px;
+color:white;
+background-color:#337ab7;
+text-align:center;
+}
+.tablaOrden tr:nth-child(even){background-color: #ddd;}
+
+.tablaOrden tr:hover {background-color: #f2f2f2;}
+.tdResult{
+cursor:hand;
+}
+#txtFechaIngreso2{
+text-align:center;
+}
+#tablaModal{
+width:95%;
+margin:auto;
+}
+#tablaModal td {
+text-align: left;
+}
+#tablaModal td table td{
+text-align: center;
+}
+#tablaModal tr{
+font-size:18px;
+}
+
+</style>
+      ";
+       
+        $impresor->estilosbarranavegacion();
+        $impresor->imprimesources();
+        echo "
+        <script type='application/javascript' src='../js/moment.js'></script>
+        <script src='../js/datepicker/jquery-3.3.1.min.js' type='text/javascript' ></script>
+        
+        <link rel='stylesheet' href='../js/datepicker/vendor/pickadate/lib/themes/default.css' id='theme_base'>
+        <link rel='stylesheet' href='../js/datepicker/vendor/pickadate/lib/themes/default.date.css' id='theme_date'>
+        <link rel='stylesheet' href='../js/datepicker/vendor/pickadate/lib/themes/default.time.css' id='theme_time'>
+        <script src='../js/datepicker/lib/picker.js' type='text/javascript' ></script>
+        <script src='../js/datepicker/lib/picker.date.js' type='text/javascript' ></script>
+        <script src='../js/datepicker/lib/picker.time.js' type='text/javascript' ></script>
+                
+        
+        <script type='text/javascript' src='../js/tablesorter/jquery.tablesorter.min.js'></script>
+        <script type='text/javascript' src='../js/tablesorter/jquery.tablesorter.widgets.js'></script>
+        
+
+        <link rel='stylesheet' href='../css/tableexport.min.css' >
+        <script type='application/javascript' src='../js/xls.core.js'></script>
+        <script type='application/javascript' src='../js/FileSaver.js'></script>
+        <script type='application/javascript' src='../js/tableexport.min.js'></script>
+        <script src='../js/bootstrap5/bootstrap.min.js' type='text/javascript'></script>
+        <link href='../css/bootstrap5/bootstrap.min.css' media='all' rel='Stylesheet' type='text/css' />
+        </head>
+        <body>
+      ";
+        echo "
+
+        <div class='panel panel-primary'>
+        
+        <div class='fondo'>
+        
+        </div>
+        <div class='modal2'>
+        <div class='modalTitulo'>
+        <table >
+        <tr>
+        <td style='padding-left:80px;'>
+        <p>Dias Laborables</p>
+        </td>
+        <td width=80px>
+        <img onclick=fondoHide($('#idDias').val(),$('#txtDias').val(),'',$('#txtFechaIngreso2').val()); src='../images/close.png' title='Cerrar' width='30px' height='30px' style='cursor: hand;'>
+        </td>
+        </tr>
+        </table>
+        </div>
+        <table  id='tablaModal'>
+        <tr>
+        <td>
+        <br>
+        <br>
+        <font id='lblNombre'></font>
+        <br>
+        <br>
+        <center>
+        <div id='dia1' class='divInLine' onclick='agregarDia(1)'><table ><tr><td>Lunes</td></tr></table></div>
+        <div id='dia2' class='divInLine' onclick='agregarDia(2)'><table ><tr><td>Martes</td></tr></table></div>
+        <div id='dia3' class='divInLine' onclick='agregarDia(3)'><table><tr><td>Miercoles</td></tr></table></div>
+        <div id='dia4' class='divInLine' onclick='agregarDia(4)'><table><tr><td>Jueves</td></tr></table></div>
+        <div id='dia5' class='divInLine' onclick='agregarDia(5)'><table><tr><td>Viernes</td></tr></table></div>
+        <div id='dia6' class='divInLine' onclick='agregarDia(6)'><table><tr><td>SÃ¡bado</td></tr></table></div>
+        <div id='dia7' class='divInLine' onclick='agregarDia(7)'><table><tr><td>Domingo</td></tr></table></div>
+        </center>
+        <br>
+        <br>
+        Fecha de Ingreso: <input id='txtFechaIngreso2'  name='txtFechaIngreso2' value=''>
+        </td>
+        </tr>
+        </table>
+        </div>
+                <div class='panel-heading' style='max-height: 72;'> 
+                  <!--InformaciÃ³n del asociado  -->
+                <table class='table'>
+                <tr>";
+                    //Este segmento de codigo revisa los permisos del usuario e imprime los botones necesarios con base en ello, 
+                    //el cuerpo de funcion esta en funciones.php. Si vas a modificarlo, solo ten cuidado con no arruinar los estilos.
+                   
+                    opciones($permisosaimprimir,9,"");
+        
+                  echo $nomuser."</a></td>
+                    <td width='1%'> 
+                          <a href='cerrarsesion.php'>
+                            <span class='glyphicon glyphicon-log-out'></span>
+                          </a>
+                    </td>
+                  </tr>
+                  </table>
+                </div>
+                </div>
+                <div>
+                ";
+    if($general=="si"){
+    $option1="";
+    $option2="selected";
+    $option3="";
+    $ocultarBtn="hidden";
+    $estilo="style=width:1%;border-top-right-radius:10px;";
+    $_SESSION["accion"]=0;
+    $sql="BEGIN VAC_PRC_RETTODOSUSUARIOS(:usuarios); END ;";
+    $stmt=oci_parse($conn,$sql);$cursor = oci_new_cursor($conn);
+    oci_bind_by_name($stmt, ":usuarios", $cursor, -1, OCI_B_CURSOR);
+    }
+    else if($general=="no" || $general==""){
+    $option1="selected";
+    $option2="";
+    $option3="";
+    $imagen="ocultar";
+    $sql = "BEGIN VAC_PRC_USERNMAPROBFILT2(:idu,:pagina,:nombreseids); END ;";
+    $stmt=oci_parse($conn,$sql);
+    oci_bind_by_name($stmt,':idu',$idusuarioData,32);
+    oci_bind_by_name($stmt,':pagina',$pagina,32);
+    oci_bind_by_name($stmt, ":nombreseids", $cursor, -1, OCI_B_CURSOR);
+    }
+    else if ($general=="ocultos"){
+        $pagina="ocultos";
+        $texto="Mostrar";
+        $ocultar="2";
+        $option1="";
+        $option2="";
+        $option3="selected";
+        $imagen="agregar_circulo";
+        $sql = "BEGIN VAC_PRC_USERNMAPROBFILT2(:idu,:pagina,:nombreseids); END ;";
+    $stmt=oci_parse($conn,$sql);
+    oci_bind_by_name($stmt,':idu',$idusuarioData,32);
+    oci_bind_by_name($stmt,':pagina',$pagina,32);
+    oci_bind_by_name($stmt, ":nombreseids", $cursor, -1, OCI_B_CURSOR);
+    }
+    oci_execute($stmt);
+    oci_execute($cursor);
+    $rowAnt="";
+    echo "<table class=tablaOrden style=width:50%;>
+        <tr>
+        <td>
+        <input class='search' type='search' style='width:100%;text-align: center;' data-column='all' placeholder=Buscar...>
+           </td>
+           
+             "; 
+    
+    if(in_array(11, $permisos))
+         {
+   
+    echo "
+        <td style=width:10%;>
+        <form style=width:1%;margin:0px; id=formGeneral method=POST action=informe.php>
+         
+               <select name=general id=general onchange=$('#formGeneral').submit()>
+                    <option value='no' $option1>Visibles</option>
+                    <option value='ocultos' $option3>Ocultos</option>
+                    ";
+          if($_SESSION['iddepartamento']==29){
+                echo "
+                    <option value='si' $option2>Todos</option>
+               ";
+         }
+               echo "     
+               </select>
+           </form>
+           </td>
+         ";
+    
+         }
+         else $estilo="style=width:1%;border-top-right-radius:10px;";
+            echo "
+           
+         <td style=width:10%;><button style=width:100% onclick=exportarXLSX();>XLSX</button></td>
+        </table>
+    <br>
+    
+
+
+<div class='container'>
+<div class='row py-2 text-white text-center bg-secondary divLargo'>
+<div class='text-center py-2 col-1 d-flex align-items-end justify-content-center'>ID</div>
+<div class='text-center py-2 col-7 d-flex align-items-end justify-content-center'>Nombre</div>
+<div class='col-1 py-2 d-flex align-items-end justify-content-center'>Departamento</div>
+<div class='col-1 py-2 d-flex align-items-end justify-content-center'>Dias</div>
+<div class='col-1 py-2 d-flex align-items-end justify-content-center'>Pendientes</div>
+<div class='col-1 py-1 text-white d-flex align-items-end justify-content-center'><button onclick='mostrarOcultarArea();' class='btn' style='width:100%; font-size:12px;' type='button' title='Agregar nueva area'><i class='fa-solid fa-plus'></i></button></div>
+</div>
+</div>
+<table>
+<div class='container'><div class='row'>";
+while (($row = oci_fetch_array($cursor, OCI_BOTH)) != false){
+                                          $idu=$row[0];              
+                                          
+               
+               $sql="BEGIN VAC_PRC_CONTARDIASRESTANTES(:idu ,:nombre,:apaterno,:amaterno,:departamento,:antiguedad,:fechaIngreso,:fechaCumple,:dias,:diasLaborables,:idud,:solPendientes,:direccionOut,:celularOut,:emailOut,:usuarioOut,:claveOut); END;";               
+               $stmt=oci_parse($conn,$sql);
+               oci_bind_by_name($stmt, ":idu",$idu,32);
+               oci_bind_by_name($stmt,':nombre',$nombreq,32);
+               oci_bind_by_name($stmt,':apaterno',$apaternoq,32);
+               oci_bind_by_name($stmt,':amaterno',$amaternoq,32);
+               oci_bind_by_name($stmt,':departamento',$departamentoq,32);
+               oci_bind_by_name($stmt,':fechaIngreso',$fechaingreso,32);
+               oci_bind_by_name($stmt,':fechaCumple',$fechaCumple,32);
+               oci_bind_by_name($stmt,':antiguedad',$antiguedad,32);
+               oci_bind_by_name($stmt,':dias',$dias,32);
+               oci_bind_by_name($stmt,':diasLaborables',$diasLaborables,32);
+               oci_bind_by_name($stmt,':idud',$idud,32);
+               oci_bind_by_name($stmt,':solPendientes',$solPendientes,32);
+               oci_bind_by_name($stmt,':direccionOut',$direccionq,200);
+               oci_bind_by_name($stmt,':celularOut',$celularq,32);
+               oci_bind_by_name($stmt,':emailOut',$emailq,50);
+               oci_bind_by_name($stmt,':usuarioOut',$usuarioq,32);
+               oci_bind_by_name($stmt,':claveOut',$claveq,32);
+               $r=oci_execute($stmt);
+                                          
+                                          
+                         
+                                          if($rowAnt!=$idud){
+                                              echo "";
+                                               if(in_array(11, $permisos))
+                                            {
+                                              //echo "<td style=text-align:left;padding-left:30px;cursor:hand;width:1%; onclick=\"fondoHide($idu,'$diasLaborables','$apaternoq $amaternoq $nombreq');\"><img  src='../images/calendar.png' title='Cambiar Dias Laborables' width='20px' height='20px' style='cursor: hand;'></td>";
+                                            
+                                            }
+                                            
+                                              echo "<div class='col-1 text-center py-2'>$idud</div>
+                                                  <div onclick='abrirHistorico($idu);' class='tdResult col-7  py-2' style=text-align:left>$apaternoq $amaternoq $nombreq</div>
+                                                  <div class='col-1 text-center py-2'>$departamentoq</div>
+                                                  <div class='col-1 text-center py-2'>$dias</div>
+                                                  <div class='col-1 text-center py-2'>$solPendientes</div>
+                                                  ";
+                                          if(in_array(11, $permisos))
+                                            {
+                                          echo"<div class='col-1 text-center py-2' onclick='ocultar($idud,$ocultar)' $ocultarBtn><img src='../images/$imagen.png' title='Ocultar del Sistema de Vacaciones' width='20px' height='20px' style='cursor: hand;'
+                                                   ></div>";
+                                            }
+                                          echo "";
+                                          }
+                                          $rowAnt=$idud;
+    }
+    echo "</div></div>";
+//echo "</div></div>
+//
+//
+//
+//    <table class=tablaOrden id=tablaOrden style='width:80%'>
+//    <thead>
+//    <tr class='tdResult'>
+//    ";
+//              if(in_array(11, $permisos)){
+//                //  echo "<th style=border-top-left-radius:10px;width:120px;></th>";
+//              }
+//            echo "
+//            <th ";
+//              echo "style=border-top-left-radius:10px;width:120px;";
+//              if(!in_array(11, $permisos)){
+//              echo "style=border-top-left-radius:10px;width:120px;";
+//              }
+//              
+//            echo "
+//            >ID</th>
+//            <th>NOMBRE</th>
+//            <th>DEPARTAMENTO</th>
+//            <th style=width:90px;>DIAS</th>
+//            <th $estilo>PENDIENTES</th>
+//            ";
+//            if(in_array(11, $permisos))
+//         {
+//            echo "
+//            <th style=width:1%;border-top-right-radius:10px; $ocultarBtn></th>
+//            ";
+//         }
+//            echo "
+//    </tr>
+//    </thead>
+//    <tbody>";
+//    while (($row = oci_fetch_array($cursor, OCI_BOTH)) != false){
+//                                          $idu=$row[0];              
+//                                          
+//               
+//               $sql="BEGIN VAC_PRC_CONTARDIASRESTANTES(:idu ,:nombre,:apaterno,:amaterno,:departamento,:antiguedad,:fechaIngreso,:fechaCumple,:dias,:diasLaborables,:idud,:solPendientes,:direccionOut,:celularOut,:emailOut,:usuarioOut,:claveOut); END;";               
+//               $stmt=oci_parse($conn,$sql);
+//               oci_bind_by_name($stmt, ":idu",$idu,32);
+//               oci_bind_by_name($stmt,':nombre',$nombreq,32);
+//               oci_bind_by_name($stmt,':apaterno',$apaternoq,32);
+//               oci_bind_by_name($stmt,':amaterno',$amaternoq,32);
+//               oci_bind_by_name($stmt,':departamento',$departamentoq,32);
+//               oci_bind_by_name($stmt,':fechaIngreso',$fechaingreso,32);
+//               oci_bind_by_name($stmt,':fechaCumple',$fechaCumple,32);
+//               oci_bind_by_name($stmt,':antiguedad',$antiguedad,32);
+//               oci_bind_by_name($stmt,':dias',$dias,32);
+//               oci_bind_by_name($stmt,':diasLaborables',$diasLaborables,32);
+//               oci_bind_by_name($stmt,':idud',$idud,32);
+//               oci_bind_by_name($stmt,':solPendientes',$solPendientes,32);
+//               oci_bind_by_name($stmt,':direccionOut',$direccionq,200);
+//               oci_bind_by_name($stmt,':celularOut',$celularq,32);
+//               oci_bind_by_name($stmt,':emailOut',$emailq,50);
+//               oci_bind_by_name($stmt,':usuarioOut',$usuarioq,32);
+//               oci_bind_by_name($stmt,':claveOut',$claveq,32);
+//               $r=oci_execute($stmt);
+//                                          
+//                                          
+//                         
+//                                          if($rowAnt!=$idud){
+//                                              echo "<tr>";
+//                                               if(in_array(11, $permisos))
+//                                            {
+//                                              //echo "<td style=text-align:left;padding-left:30px;cursor:hand;width:1%; onclick=\"fondoHide($idu,'$diasLaborables','$apaternoq $amaternoq $nombreq');\"><img  src='../images/calendar.png' title='Cambiar Dias Laborables' width='20px' height='20px' style='cursor: hand;'></td>";
+//                                            
+//                                            }
+//                                            
+//                                              echo "<td>$idud</td>
+//                                                  <td onclick='abrirHistorico($idu);' class='tdResult' style=text-align:left>$apaternoq $amaternoq $nombreq</td>
+//                                                  <td>$departamentoq</td>
+//                                                  <td>$dias</td>
+//                                                  <td>$solPendientes</td>
+//                                                  ";
+//                                          if(in_array(11, $permisos))
+//                                            {
+//                                          echo"<td onclick='ocultar($idud,$ocultar)' $ocultarBtn><img src='../images/$imagen.png' title='Ocultar del Sistema de Vacaciones' width='20px' height='20px' style='cursor: hand;'
+//                                                   ></td>";
+//                                            }
+//                                          echo "</tr>";
+//                                          }
+//                                          $rowAnt=$idud;
+//    }
+//    echo "
+//        </tbody>
+//        </table>
+//        </div>
+    echo"
+        </table>
+        <form id='forminfo' method='POST'>
+                  <input type=hidden name=idusuario value=$idusuario>
+                  <input id='mandarinfo' type=submit value='oculto' hidden>
+                  </form>
+         <form id='formHistorico' name='formHistorico' action='estadovacaciones.php' method='POST'>
+         <input type='hidden' id='idHistorico' name='idHistorico'></input>
+         </form>
+         <form id='ocultarUsuario' method='POST' action='ocultarInforme.php'>
+         <input type='hidden' id='idOculto' name='idOculto'>
+         <input type='hidden' id='nuevo' name='nuevo'>
+         <input type='hidden' id='general2' name='general2'>
+         <input type='hidden' id='txtDias' name='dias'>
+         <input type='hidden' id='idDias' name='idDias'>
+         <input type='hidden' id='txtFechaIngreso' onchange=\"\$('#txtFechaIngreso2').val(picker.get('highlight', 'dd-mm-yyyy'));\" name='txtFechaIngreso'>
+         <input type='checkbox' name='diasLab' id='diasLab1'  hidden  value='1' onchange='diaLab()'>
+         <input type='checkbox' name='diasLab' id='diasLab2'  hidden  value='2' onchange='diaLab()'>
+         <input type='checkbox' name='diasLab' id='diasLab3'  hidden  value='3' onchange='diaLab()'>
+         <input type='checkbox' name='diasLab' id='diasLab4'  hidden  value='4' onchange='diaLab()'>
+         <input type='checkbox' name='diasLab' id='diasLab5'  hidden  value='5' onchange='diaLab()'>
+         <input type='checkbox' name='diasLab' id='diasLab6'  hidden  value='6' onchange='diaLab()'>
+         <input type='checkbox' name='diasLab' id='diasLab7'  hidden  value='7' onchange='diaLab()'>
+         </form>
+         <script type='application/javascript' src='../js/informe.js'></script>
+        <script>
+        var \$input = $('#txtFechaIngreso').pickadate({
+        format: 'dd-mm-yyyy',
+        selectMonths: true,
+        selectYears: 70,
+        min: new Date(1949,1,1),
+        max: new Date()
+        });
+        var picker = \$input.pickadate('picker');
+        \$('#txtFechaIngreso2').on('focus',function(){
+        picker.open();
+        })
+        $('#txtFechaIngreso').hide();
+        function ocultar(id,nuevo){
+        if(confirm('$texto usuario con id '+ id + '?')){
+        document.getElementById('idOculto').value=id;
+        document.getElementById('nuevo').value=nuevo;
+        document.getElementById('general2').value='ocultos';
+        document.getElementById('ocultarUsuario').submit();
+        }
+        }
+        $('table').tablesorter({
+        widgets: ['zebra', 'filter'],
+        widgetOptions : {
+        filter_external : '.search',
+        filter_defaultFilter: { 1 : '~{query}' },
+        filter_columnFilters: false,
+        filter_searchDelay : 100,
+        filter_placeholder: { search : 'Buscar...' },
+        filter_saveFilters : false,
+        filter_reset: '.reset'
+          }
+        });
+  
+        $('#tablaOrden').tableExport({
+            headings: true,                    // (Boolean), display table headings (th/td elements) in the <thead>
+            footers: true,                     // (Boolean), display table footers (th/td elements) in the <tfoot>
+            formats: ['xlsx', 'csv', 'txt'],    // (String[]), filetypes for the export
+            fileName: 'id',                    // (id, String), filename for the downloaded file
+            bootstrap: true,                   // (Boolean), style buttons using bootstrap
+            position: 'bottom',                 // (top, bottom), position of the caption element relative to table
+            ignoreRows: null,                  // (Number, Number[]), row indices to exclude from the exported file(s)
+            ignoreCols: null,                  // (Number, Number[]), column indices to exclude from the exported file(s)
+            ignoreCSS: '.tableexport-ignore',  // (selector, selector[]), selector(s) to exclude from the exported file(s)
+            emptyCSS: '.tableexport-empty',    // (selector, selector[]), selector(s) to replace cells with an empty string in the exported file(s)
+            trimWhitespace: false              // (Boolean), remove all leading/trailing newlines, spaces, and tabs from cell text in the exported file(s)
+        });
+                        
+        function exportarXLSX(){
+        var x = document.getElementsByClassName('xlsx');
+        x[0].click();
+        }
+      </script>
+      
+        
+              </body>
+              </html>
+              ";
+       oci_free_cursor($cursor);
+       oci_close($conn);
+       $_SESSION["accion"]=0;
+      
+?>
