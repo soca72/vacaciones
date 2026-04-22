@@ -1,0 +1,10 @@
+{
+  "name": "vacaciones-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend base de vacaciones",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
