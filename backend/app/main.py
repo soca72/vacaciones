@@ -4,7 +4,7 @@ from datetime import date
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 
-from .db_oracle import create_pool, get_connection, close_pool
+from .db_oracle import close_pool, create_pool, get_connection, get_pool_status
 from .services.requests_service import (
     buscar_solicitudes,
     estado_es_valido,
@@ -64,6 +64,25 @@ def db_check():
             cur.close()
         if conn:
             conn.close()
+
+
+@app.get("/oracle/pool-status")
+def oracle_pool_status():
+    try:
+        return {
+            "status": "ok",
+            "pool": get_pool_status(),
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "endpoint": "/oracle/pool-status",
+                "message": str(e),
+            },
+        )
 
 
 @app.get("/oracle/procedimiento-args")

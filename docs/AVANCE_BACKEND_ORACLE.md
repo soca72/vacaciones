@@ -6,6 +6,7 @@ Se validó conexión exitosa desde el backend nuevo en contenedor hacia Oracle 1
 ## Evidencia
 - Endpoint `/health` funcional
 - Endpoint `/db-check` funcional
+- Endpoint `/oracle/pool-status` funcional para inspeccionar el estado del pool Oracle sin exponer credenciales
 - Respuesta correcta: `{"status":"ok","database":"oracle","result":1}`
 - Endpoint `/usuarios/buscar` funcional usando `usuarios.usuario`
 - Soporte para busqueda parcial por defecto y exacta con `exacto=true`

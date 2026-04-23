@@ -45,6 +45,25 @@ def get_connection():
     return pool.acquire()
 
 
+def get_pool_status():
+    if pool is None:
+        return {
+            "initialized": False,
+            "thick_initialized": thick_initialized,
+        }
+
+    return {
+        "initialized": True,
+        "thick_initialized": thick_initialized,
+        "thin": pool.thin,
+        "min": pool.min,
+        "max": pool.max,
+        "increment": pool.increment,
+        "opened": pool.opened,
+        "busy": pool.busy,
+    }
+
+
 def close_pool():
     global pool
     if pool is not None:

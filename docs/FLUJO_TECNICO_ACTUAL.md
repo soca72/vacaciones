@@ -84,6 +84,7 @@ Comportamiento:
 ## Endpoints ya operativos
 - `GET /health`
 - `GET /db-check`
+- `GET /oracle/pool-status`
 - `GET /oracle/procedimiento-args`
 - `GET /usuarios/buscar`
 - `GET /solicitudes/consultar`
