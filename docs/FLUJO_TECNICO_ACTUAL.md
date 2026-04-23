@@ -114,6 +114,7 @@ Comportamiento:
 - El frontend nuevo sigue siendo una base minima en Node
 - La migracion se esta haciendo primero por lectura
 - Login, aprobacion y cancelacion todavia no se migran
+- El pool Oracle puede configurarse para no mantener sesiones minimas ociosas con `ORACLE_POOL_MIN=0`
 
 ## Siguiente paso sugerido
 Seguir con casos de uso de solo lectura o mejorar la estructura interna del frontend para facilitar futuros cambios.
