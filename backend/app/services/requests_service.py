@@ -7,6 +7,7 @@ from .users_service import _rows_to_dicts
 
 def buscar_solicitudes(
     idusuariodata_autorizador: int,
+    idsolicitud: int | None = None,
     idusuariodata: int | None = None,
     estado: str | None = None,
     fi: date | None = None,
@@ -25,6 +26,10 @@ def buscar_solicitudes(
         "idusuariodata_autorizador": idusuariodata_autorizador,
         "limit": limit,
     }
+
+    if idsolicitud is not None:
+        where_clauses.append("vsv.idsolicitud = :idsolicitud")
+        params["idsolicitud"] = idsolicitud
 
     if idusuariodata is not None:
         where_clauses.append("u.idusuariodata = :idusuariodata")
@@ -144,6 +149,17 @@ def _build_estado_clause(estado: str) -> str | None:
     }
 
     return estado_map.get(normalized)
+
+
+def estado_es_valido(estado: str | None) -> bool:
+    if estado is None:
+        return True
+    return _build_estado_clause(estado) is not None
+
+
+def tipo_fecha_es_valido(tipo_fecha: str | None) -> bool:
+    normalized = (tipo_fecha or "permiso").strip().lower()
+    return normalized in {"permiso", "alta"}
 
 
 def _resolve_action_label(item: dict[str, Any]) -> str:

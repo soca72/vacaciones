@@ -96,6 +96,7 @@ async function handleApiSolicitudes(req, res) {
   const backendUrl = new URL("/solicitudes/consultar", API_BASE_URL);
   const passthroughParams = [
     "idusuariodata_autorizador",
+    "idsolicitud",
     "idusuariodata",
     "estado",
     "fi",

@@ -405,6 +405,11 @@ const html = `<!DOCTYPE html>
           </label>
 
           <label>
+            Id solicitud
+            <input id="idsolicitud" name="idsolicitud" type="number" min="1" placeholder="Opcional" />
+          </label>
+
+          <label>
             Estado
             <select id="estado" name="estado">
               <option value="">Todos</option>
@@ -477,6 +482,7 @@ const html = `<!DOCTYPE html>
     const detailMeta = document.getElementById("detail-meta");
     const detailResults = document.getElementById("detail-results");
     const autorizadorInput = document.getElementById("idusuariodata_autorizador");
+    const idSolicitudInput = document.getElementById("idsolicitud");
     const estadoInput = document.getElementById("estado");
     const fiInput = document.getElementById("fi");
     const ffInput = document.getElementById("ff");
@@ -719,6 +725,9 @@ const html = `<!DOCTYPE html>
         limit: limitInput.value || "10",
       });
 
+      if (idSolicitudInput.value) {
+        params.set("idsolicitud", idSolicitudInput.value);
+      }
       if (estadoInput.value) {
         params.set("estado", estadoInput.value);
       }
@@ -744,7 +753,7 @@ const html = `<!DOCTYPE html>
         }
 
         setRequestsMessage(
-          \`Solicitudes de \${currentUser.usuario} | resultados: \${data.count} | estado: \${data.filters.estado || "todos"}\`,
+          \`Solicitudes de \${currentUser.usuario} | resultados: \${data.count} | estado: \${data.filters.estado || "todos"} | solicitud: \${data.filters.idsolicitud || "todas"}\`,
           data.count ? "success" : null
         );
         renderRequests(data.items || []);

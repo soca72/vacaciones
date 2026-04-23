@@ -11,6 +11,7 @@ Se validó conexión exitosa desde el backend nuevo en contenedor hacia Oracle 1
 - Soporte para busqueda parcial por defecto y exacta con `exacto=true`
 - Frontend nuevo en `localhost:3000` consumiendo `/usuarios/buscar` por medio de un proxy interno
 - Endpoint `/solicitudes/consultar` funcional en modo solo lectura con filtros basicos y bind variables
+- Endpoint `/solicitudes/consultar` con validacion explicita de filtros, rango de fechas y filtro opcional por `idsolicitud`
 - Frontend nuevo consumiendo usuarios y solicitudes en un flujo simple: buscar usuario -> consultar solicitudes
 - Endpoint `/solicitudes/detalle` funcional usando `VAC_PRC_HISTORIALSOLICITUD`
 - Frontend nuevo con flujo completo de lectura: buscar usuario -> consultar solicitudes -> ver detalle

@@ -5,7 +5,12 @@ from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 
 from .db_oracle import create_pool, get_connection, close_pool
-from .services.requests_service import buscar_solicitudes, obtener_historial_solicitud
+from .services.requests_service import (
+    buscar_solicitudes,
+    estado_es_valido,
+    obtener_historial_solicitud,
+    tipo_fecha_es_valido,
+)
 from .services.users_service import (
     buscar_usuarios_por_usuario,
     obtener_argumentos_procedimiento,
@@ -123,6 +128,11 @@ def solicitudes_consultar(
         gt=0,
         description="Id de usuariosdata del autorizador que tiene acceso a los departamentos",
     ),
+    idsolicitud: int | None = Query(
+        None,
+        gt=0,
+        description="Filtro opcional por id de solicitud exacto",
+    ),
     idusuariodata: int | None = Query(
         None,
         gt=0,
@@ -152,8 +162,39 @@ def solicitudes_consultar(
     ),
 ):
     try:
+        if fi and ff and fi > ff:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "endpoint": "/solicitudes/consultar",
+                    "message": "La fecha inicial no puede ser mayor que la fecha final.",
+                },
+            )
+
+        if not estado_es_valido(estado):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "endpoint": "/solicitudes/consultar",
+                    "message": "El parametro estado no es valido. Usa: pendiente, aprobada_jefe, autorizada, autorizada_gerente o cancelada.",
+                },
+            )
+
+        if not tipo_fecha_es_valido(tipo_fecha):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "endpoint": "/solicitudes/consultar",
+                    "message": "El parametro tipo_fecha no es valido. Usa: permiso o alta.",
+                },
+            )
+
         items = buscar_solicitudes(
             idusuariodata_autorizador=idusuariodata_autorizador,
+            idsolicitud=idsolicitud,
             idusuariodata=idusuariodata,
             estado=estado,
             fi=fi,
@@ -166,6 +207,7 @@ def solicitudes_consultar(
             "status": "ok",
             "filters": {
                 "idusuariodata_autorizador": idusuariodata_autorizador,
+                "idsolicitud": idsolicitud,
                 "idusuariodata": idusuariodata,
                 "estado": estado,
                 "fi": fi.isoformat() if fi else None,
