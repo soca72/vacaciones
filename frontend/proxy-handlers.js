@@ -70,6 +70,25 @@ async function handleApiBuscar(req, res) {
   await proxyJson(res, backendUrl, "/api/usuarios/buscar");
 }
 
+async function handleApiVacacionesResumen(req, res) {
+  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+  const idusuario = requestUrl.searchParams.get("idusuario");
+
+  if (!idusuario) {
+    sendJson(res, 400, {
+      status: "error",
+      endpoint: "/api/vacaciones/resumen",
+      message: "El parametro idusuario es obligatorio.",
+    });
+    return;
+  }
+
+  const backendUrl = new URL("/vacaciones/resumen", API_BASE_URL);
+  backendUrl.searchParams.set("idusuario", idusuario);
+
+  await proxyJson(res, backendUrl, "/api/vacaciones/resumen");
+}
+
 async function handleApiSolicitudes(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const autorizador = requestUrl.searchParams.get("idusuariodata_autorizador");
@@ -138,6 +157,7 @@ module.exports = {
   handleApiBuscar,
   handleApiSolicitudDetalle,
   handleApiSolicitudes,
+  handleApiVacacionesResumen,
   sendHtml,
   sendJson,
   sendText,

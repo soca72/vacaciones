@@ -60,6 +60,18 @@ Comportamiento:
 - Usa filtros dinamicos controlados
 - Usa bind variables
 
+### 2.1. Resumen de vacaciones
+Ruta frontend proxy:
+- `GET /api/vacaciones/resumen?idusuario=...`
+
+Ruta backend:
+- `GET /vacaciones/resumen?idusuario=...`
+
+Comportamiento:
+- Consulta resumen base de vacaciones por `idusuario`
+- Reutiliza procedimientos Oracle del sistema legado
+- Devuelve dias de derecho, tomados y restantes
+
 ### 3. Ver detalle de solicitud
 Ruta frontend proxy:
 - `GET /api/solicitudes/detalle?idsolicitud=...`
@@ -87,6 +99,7 @@ Comportamiento:
 - `GET /oracle/pool-status`
 - `GET /oracle/procedimiento-args`
 - `GET /usuarios/buscar`
+- `GET /vacaciones/resumen`
 - `GET /solicitudes/consultar`
 - `GET /solicitudes/detalle`
 

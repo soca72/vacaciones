@@ -9,8 +9,10 @@ Se validó conexión exitosa desde el backend nuevo en contenedor hacia Oracle 1
 - Endpoint `/oracle/pool-status` funcional para inspeccionar el estado del pool Oracle sin exponer credenciales
 - Respuesta correcta: `{"status":"ok","database":"oracle","result":1}`
 - Endpoint `/usuarios/buscar` funcional usando `usuarios.usuario`
+- Endpoint `/vacaciones/resumen` funcional para consultar saldo base de vacaciones por usuario
 - Soporte para busqueda parcial por defecto y exacta con `exacto=true`
 - Frontend nuevo en `localhost:3000` consumiendo `/usuarios/buscar` por medio de un proxy interno
+- Frontend nuevo mostrando resumen de vacaciones al seleccionar usuario
 - Endpoint `/solicitudes/consultar` funcional en modo solo lectura con filtros basicos y bind variables
 - Endpoint `/solicitudes/consultar` con validacion explicita de filtros, rango de fechas y filtro opcional por `idsolicitud`
 - Frontend nuevo consumiendo usuarios y solicitudes en un flujo simple: buscar usuario -> consultar solicitudes

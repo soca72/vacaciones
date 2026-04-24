@@ -15,6 +15,7 @@ from .services.users_service import (
     buscar_usuarios_por_usuario,
     obtener_argumentos_procedimiento,
 )
+from .services.vacation_service import obtener_resumen_vacaciones
 
 
 @asynccontextmanager
@@ -135,6 +136,34 @@ def usuarios_buscar(
             content={
                 "status": "error",
                 "endpoint": "/usuarios/buscar",
+                "message": str(e),
+            },
+        )
+
+
+@app.get("/vacaciones/resumen")
+def vacaciones_resumen(
+    idusuario: int = Query(
+        ...,
+        gt=0,
+        description="Id del usuario para consultar su resumen de vacaciones",
+    ),
+):
+    try:
+        item = obtener_resumen_vacaciones(idusuario)
+
+        return {
+            "status": "ok",
+            "idusuario": idusuario,
+            "item": item,
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "endpoint": "/vacaciones/resumen",
                 "message": str(e),
             },
         )

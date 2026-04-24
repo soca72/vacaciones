@@ -312,6 +312,13 @@ const html = `<!DOCTYPE html>
       color: #065f46;
     }
 
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 18px;
+    }
+
     .inline-detail {
       margin-top: 14px;
       padding-top: 14px;
@@ -320,7 +327,8 @@ const html = `<!DOCTYPE html>
 
     @media (max-width: 860px) {
       .filters,
-      .request-grid {
+      .request-grid,
+      .summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
@@ -332,7 +340,8 @@ const html = `<!DOCTYPE html>
 
       .row,
       .filters,
-      .request-grid {
+      .request-grid,
+      .summary-grid {
         grid-template-columns: 1fr;
       }
 
@@ -390,7 +399,19 @@ const html = `<!DOCTYPE html>
     <section class="panel">
       <div class="section-head">
         <div>
-          <h2>2. Consultar solicitudes</h2>
+          <h2>2. Resumen de vacaciones</h2>
+          <p class="section-copy">Resumen base del saldo de vacaciones usando procedimientos Oracle del sistema legado.</p>
+        </div>
+      </div>
+
+      <p id="summary-meta" class="meta">Selecciona un usuario para consultar su saldo de vacaciones.</p>
+      <div id="summary-results" class="summary-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <h2>3. Consultar solicitudes</h2>
           <p class="section-copy">Esta consulta usa el endpoint nuevo <code>/solicitudes/consultar</code> en modo solo lectura.</p>
         </div>
       </div>
@@ -458,7 +479,7 @@ const html = `<!DOCTYPE html>
     <section class="panel">
       <div class="section-head">
         <div>
-          <h2>3. Detalle de solicitud</h2>
+          <h2>4. Detalle de solicitud</h2>
           <p class="section-copy">Usa el boton <code>Ver detalle</code> para consultar el historial detallado de una solicitud.</p>
         </div>
       </div>
@@ -476,6 +497,8 @@ const html = `<!DOCTYPE html>
     const exacto = document.getElementById("exacto");
 
     const requestsForm = document.getElementById("requests-form");
+    const summaryMeta = document.getElementById("summary-meta");
+    const summaryResults = document.getElementById("summary-results");
     const requestsMeta = document.getElementById("requests-meta");
     const requestsResults = document.getElementById("requests-results");
     const selectedUser = document.getElementById("selected-user");
@@ -503,6 +526,11 @@ const html = `<!DOCTYPE html>
     function setRequestsMessage(message, kind) {
       requestsMeta.textContent = message;
       requestsMeta.className = kind ? \`meta \${kind}\` : "meta";
+    }
+
+    function setSummaryMessage(message, kind) {
+      summaryMeta.textContent = message;
+      summaryMeta.className = kind ? \`meta \${kind}\` : "meta";
     }
 
     function setDetailMessage(message, kind) {
@@ -550,8 +578,10 @@ const html = `<!DOCTYPE html>
         button.addEventListener("click", () => {
           const user = JSON.parse(button.dataset.user);
           setSelectedUser(user);
+          summaryResults.innerHTML = "";
           requestsResults.innerHTML = "";
           detailResults.innerHTML = "";
+          loadResumenVacaciones(user);
           setDetailMessage("Aun no se ha consultado el detalle de ninguna solicitud.", null);
           setRequestsMessage(
             \`Usuario listo para consultar solicitudes: \${user.usuario} (idusuariodata \${user.idusuariodata}).\`,
@@ -620,6 +650,35 @@ const html = `<!DOCTYPE html>
           loadDetalleSolicitud(button.dataset.detailId);
         });
       }
+    }
+
+    function renderResumenVacaciones(item) {
+      if (!item) {
+        summaryResults.innerHTML = "";
+        return;
+      }
+
+      summaryResults.innerHTML = [
+        { label: "Nombre", value: item.nombre || "-" },
+        { label: "Departamento", value: item.departamento || "-" },
+        { label: "Antiguedad", value: \`\${item.antiguedad || 0} anos\` },
+        { label: "Fecha ingreso", value: item.fecha_ingreso || "-" },
+        { label: "Fecha cumple", value: item.fecha_cumple || "-" },
+        { label: "Fecha referencia", value: item.fecha_referencia || "-" },
+        { label: "Dias derecho", value: item.dias_derecho || 0 },
+        { label: "Dias tomados", value: item.dias_tomados || 0 },
+        { label: "Dias restantes", value: item.dias_restantes || 0 },
+        { label: "Dias laborables", value: item.dias_laborables || "-" },
+        { label: "Solicitudes pendientes", value: item.solicitudes_pendientes || 0 },
+        { label: "Usuario", value: item.usuario || "-" },
+      ]
+        .map((field) => \`
+          <div class="request-field">
+            <strong>\${escapeHtml(field.label)}</strong>
+            <span>\${escapeHtml(field.value)}</span>
+          </div>
+        \`)
+        .join("");
     }
 
     function renderDetalle(items, idsolicitud) {
@@ -767,6 +826,29 @@ const html = `<!DOCTYPE html>
       } catch (error) {
         setRequestsMessage(error.message, "error");
         requestsResults.innerHTML = "";
+      }
+    }
+
+    async function loadResumenVacaciones(user) {
+      setSummaryMessage(\`Consultando resumen de vacaciones de \${user.usuario}...\`, null);
+      summaryResults.innerHTML = "";
+
+      try {
+        const response = await fetch(\`/api/vacaciones/resumen?idusuario=\${encodeURIComponent(user.idusuario)}\`);
+        const data = await response.json();
+
+        if (!response.ok || data.status !== "ok") {
+          throw new Error(data.message || "No fue posible consultar el resumen de vacaciones.");
+        }
+
+        renderResumenVacaciones(data.item || null);
+        setSummaryMessage(
+          \`Resumen cargado para \${user.usuario} | dias restantes: \${data.item?.dias_restantes ?? 0}\`,
+          "success"
+        );
+      } catch (error) {
+        setSummaryMessage(error.message, "error");
+        summaryResults.innerHTML = "";
       }
     }
 

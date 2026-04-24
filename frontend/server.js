@@ -5,6 +5,7 @@ const {
   handleApiBuscar,
   handleApiSolicitudDetalle,
   handleApiSolicitudes,
+  handleApiVacacionesResumen,
   sendHtml,
   sendJson,
   sendText,
@@ -20,6 +21,11 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && req.url.startsWith("/api/usuarios/buscar")) {
     await handleApiBuscar(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && req.url.startsWith("/api/vacaciones/resumen")) {
+    await handleApiVacacionesResumen(req, res);
     return;
   }
 
