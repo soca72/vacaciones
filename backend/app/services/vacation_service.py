@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 import oracledb
@@ -190,7 +190,7 @@ def _obtener_dias_derecho(cursor, antiguedad: int, fecha_referencia: str) -> int
     resultado = _to_int(dias_derecho.getvalue())
 
     if aplica_extra:
-        dias_extra = 25 if _fecha_referencia_es_2011_03_31(fecha_referencia) else 18
+        dias_extra = _obtener_dias_extra_por_antiguedad(fecha_referencia)
         for _ in range(16, antiguedad_original):
             resultado += dias_extra
 
@@ -212,19 +212,40 @@ def _obtener_dias_laborables(cursor, idusuario: int, fecha_ingreso: str) -> str:
     return _clean_text(dias_laborables.getvalue())
 
 
-def _fecha_referencia_es_2011_03_31(fecha_referencia: str) -> bool:
+def _obtener_dias_extra_por_antiguedad(fecha_referencia: str) -> int:
+    fecha = _parse_fecha_referencia(fecha_referencia)
+    if fecha is None:
+        return 25
+
+    # Replica la regla historica del PHP legado:
+    # si la fecha de referencia es posterior al 31-03-2011, agrega 20 dias por anio extra;
+    # en caso contrario, agrega 25.
+    return 20 if fecha > date(2011, 3, 31) else 25
+
+
+def _parse_fecha_referencia(fecha_referencia: str) -> date | None:
     if not fecha_referencia:
-        return False
+        return None
 
-    parts = fecha_referencia.split("/")
-    if len(parts) != 3:
-        return False
+    value = str(fecha_referencia).strip()
+    if not value:
+        return None
 
-    dia, mes, anio = parts
-    if len(anio) == 2:
-        anio = f"20{anio}"
+    formats = (
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d/%m/%y",
+        "%d-%m-%Y",
+        "%d-%m-%y",
+    )
 
-    return f"{anio}-{mes}-{dia}" == "2011-03-31"
+    for fmt in formats:
+        try:
+            return datetime.strptime(value, fmt).date()
+        except ValueError:
+            continue
+
+    return None
 
 
 def _to_int(value: Any) -> int:
