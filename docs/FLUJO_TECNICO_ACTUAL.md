@@ -70,7 +70,8 @@ Ruta backend:
 Comportamiento:
 - Consulta resumen base de vacaciones por `idusuario`
 - Reutiliza procedimientos Oracle del sistema legado
-- Devuelve dias de derecho, tomados y restantes
+- Devuelve dias de derecho, tomados y el saldo real `dias_por_tomar`
+- El valor de `dias_por_tomar` sale de `VAC_PRC_CONTARDIASRESTANTES`, igual que en PHP
 
 ### 3. Ver detalle de solicitud
 Ruta frontend proxy:

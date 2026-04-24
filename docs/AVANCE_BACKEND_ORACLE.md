@@ -10,6 +10,7 @@ Se validó conexión exitosa desde el backend nuevo en contenedor hacia Oracle 1
 - Respuesta correcta: `{"status":"ok","database":"oracle","result":1}`
 - Endpoint `/usuarios/buscar` funcional usando `usuarios.usuario`
 - Endpoint `/vacaciones/resumen` funcional para consultar saldo base de vacaciones por usuario
+- En `/vacaciones/resumen`, el saldo real `dias_por_tomar` se toma del procedimiento legado `VAC_PRC_CONTARDIASRESTANTES` para respetar el mismo valor mostrado por PHP
 - Soporte para busqueda parcial por defecto y exacta con `exacto=true`
 - Frontend nuevo en `localhost:3000` consumiendo `/usuarios/buscar` por medio de un proxy interno
 - Frontend nuevo mostrando resumen de vacaciones al seleccionar usuario

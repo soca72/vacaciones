@@ -31,6 +31,7 @@ def obtener_resumen_vacaciones(idusuario: int) -> dict[str, Any]:
             idusuario=idusuario,
             fecha_ingreso=datos["fecha_ingreso"],
         )
+        dias_por_tomar = datos["dias_disponibles"]
 
         return {
             "idusuario": idusuario,
@@ -44,7 +45,8 @@ def obtener_resumen_vacaciones(idusuario: int) -> dict[str, Any]:
             "fecha_referencia": fecha_referencia,
             "dias_derecho": dias_derecho,
             "dias_tomados": total_dias_tomados,
-            "dias_restantes": dias_derecho - total_dias_tomados,
+            "dias_por_tomar": dias_por_tomar,
+            "dias_restantes": dias_por_tomar,
             "dias_laborables": dias_laborables,
             "solicitudes_pendientes": datos["solicitudes_pendientes"],
         }
@@ -133,6 +135,7 @@ def _obtener_datos_base(cursor, idusuario: int) -> dict[str, Any]:
         "antiguedad": _to_int(antiguedad.getvalue()),
         "fecha_ingreso": _format_oracle_date(fecha_ingreso.getvalue()),
         "fecha_cumple": _format_oracle_date(fecha_cumple.getvalue()),
+        "dias_disponibles": _to_int(dias.getvalue()),
         "idusuariodata": _to_int(idusuariodata.getvalue()),
         "solicitudes_pendientes": _to_int(solicitudes_pendientes.getvalue()),
         "usuario": _clean_text(usuario.getvalue()),

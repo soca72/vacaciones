@@ -92,6 +92,7 @@ async function handleApiVacacionesResumen(req, res) {
 async function handleApiSolicitudes(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const autorizador = requestUrl.searchParams.get("idusuariodata_autorizador");
+  const idsolicitud = requestUrl.searchParams.get("idsolicitud");
   const idusuariodata = requestUrl.searchParams.get("idusuariodata");
 
   if (!autorizador) {
@@ -103,11 +104,11 @@ async function handleApiSolicitudes(req, res) {
     return;
   }
 
-  if (!idusuariodata) {
+  if (!idusuariodata && !idsolicitud) {
     sendJson(res, 400, {
       status: "error",
       endpoint: "/api/solicitudes/consultar",
-      message: "El parametro idusuariodata es obligatorio en esta pantalla.",
+      message: "Debes enviar idusuariodata o idsolicitud.",
     });
     return;
   }

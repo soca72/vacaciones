@@ -412,7 +412,7 @@ const html = `<!DOCTYPE html>
       <div class="section-head">
         <div>
           <h2>3. Consultar solicitudes</h2>
-          <p class="section-copy">Esta consulta usa el endpoint nuevo <code>/solicitudes/consultar</code> en modo solo lectura.</p>
+          <p class="section-copy">Esta consulta usa el endpoint nuevo <code>/solicitudes/consultar</code> en modo solo lectura. Puedes consultar por usuario seleccionado o por <code>Id solicitud</code>.</p>
         </div>
       </div>
 
@@ -472,7 +472,7 @@ const html = `<!DOCTYPE html>
         </div>
       </form>
 
-      <p id="requests-meta" class="meta">Selecciona un usuario arriba y luego consulta sus solicitudes.</p>
+      <p id="requests-meta" class="meta">Selecciona un usuario arriba o captura un Id solicitud para consultar directamente.</p>
       <div id="requests-results" class="requests"></div>
     </section>
 
@@ -665,7 +665,8 @@ const html = `<!DOCTYPE html>
         { label: "Fecha ingreso", value: item.fecha_ingreso || "-" },
         { label: "Fecha cumple", value: item.fecha_cumple || "-" },
         { label: "Fecha referencia", value: item.fecha_referencia || "-" },
-        { label: "Dias derecho", value: item.dias_derecho || 0 },
+        { label: "Dias por tomar", value: item.dias_por_tomar || item.dias_restantes || 0 },
+        { label: "Dias derecho acumulado", value: item.dias_derecho || 0 },
         { label: "Dias tomados", value: item.dias_tomados || 0 },
         { label: "Dias restantes", value: item.dias_restantes || 0 },
         { label: "Dias laborables", value: item.dias_laborables || "-" },
@@ -764,28 +765,31 @@ const html = `<!DOCTYPE html>
     async function consultarSolicitudes(event) {
       event.preventDefault();
 
-      if (!currentUser) {
-        setRequestsMessage("Primero selecciona un usuario en la seccion de busqueda.", "error");
-        requestsResults.innerHTML = "";
-        return;
-      }
-
       const autorizador = autorizadorInput.value.trim();
+      const idsolicitud = idSolicitudInput.value.trim();
       if (!autorizador) {
         setRequestsMessage("El id del autorizador es obligatorio.", "error");
         requestsResults.innerHTML = "";
         return;
       }
 
+      if (!currentUser && !idsolicitud) {
+        setRequestsMessage("Selecciona un usuario o captura un Id solicitud.", "error");
+        requestsResults.innerHTML = "";
+        return;
+      }
+
       const params = new URLSearchParams({
         idusuariodata_autorizador: autorizador,
-        idusuariodata: String(currentUser.idusuariodata),
         tipo_fecha: tipoFechaInput.value,
         limit: limitInput.value || "10",
       });
 
-      if (idSolicitudInput.value) {
-        params.set("idsolicitud", idSolicitudInput.value);
+      if (currentUser) {
+        params.set("idusuariodata", String(currentUser.idusuariodata));
+      }
+      if (idsolicitud) {
+        params.set("idsolicitud", idsolicitud);
       }
       if (estadoInput.value) {
         params.set("estado", estadoInput.value);
@@ -798,7 +802,9 @@ const html = `<!DOCTYPE html>
       }
 
       setRequestsMessage(
-        \`Consultando solicitudes de \${currentUser.usuario} con autorizador \${autorizador}...\`,
+        currentUser
+          ? \`Consultando solicitudes de \${currentUser.usuario} con autorizador \${autorizador}...\`
+          : \`Consultando solicitud \${idsolicitud} con autorizador \${autorizador}...\`,
         null
       );
       requestsResults.innerHTML = "";
@@ -811,15 +817,21 @@ const html = `<!DOCTYPE html>
           throw new Error(data.message || "No fue posible consultar solicitudes.");
         }
 
+        const encabezadoConsulta = currentUser
+          ? "Solicitudes de " + currentUser.usuario
+          : "Consulta por solicitud";
+
         setRequestsMessage(
-          \`Solicitudes de \${currentUser.usuario} | resultados: \${data.count} | estado: \${data.filters.estado || "todos"} | solicitud: \${data.filters.idsolicitud || "todas"}\`,
+          \`\${encabezadoConsulta} | resultados: \${data.count} | estado: \${data.filters.estado || "todos"} | solicitud: \${data.filters.idsolicitud || "todas"}\`,
           data.count ? "success" : null
         );
         renderRequests(data.items || []);
 
         if (!data.count) {
           setRequestsMessage(
-            \`No se encontraron solicitudes para \${currentUser.usuario} con los filtros actuales.\`,
+            currentUser
+              ? \`No se encontraron solicitudes para \${currentUser.usuario} con los filtros actuales.\`
+              : \`No se encontro la solicitud con los filtros actuales.\`,
             null
           );
         }
@@ -843,7 +855,7 @@ const html = `<!DOCTYPE html>
 
         renderResumenVacaciones(data.item || null);
         setSummaryMessage(
-          \`Resumen cargado para \${user.usuario} | dias restantes: \${data.item?.dias_restantes ?? 0}\`,
+          \`Resumen cargado para \${user.usuario} | dias por tomar: \${data.item?.dias_por_tomar ?? data.item?.dias_restantes ?? 0}\`,
           "success"
         );
       } catch (error) {
